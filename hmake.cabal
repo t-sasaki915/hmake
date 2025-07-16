@@ -1,0 +1,51 @@
+cabal-version: 2.2
+
+name:           hmake
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/t-sasaki915/hmake#readme>
+synopsis:       Reproduction of GNU make with more powerful syntaxes
+homepage:       https://github.com/t-sasaki915/hmake#readme
+bug-reports:    https://github.com/t-sasaki915/hmake/issues
+author:         Toma Sasaki
+maintainer:     netst915@gmail.com
+copyright:      2025 Toma Sasaki
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/t-sasaki915/hmake
+
+
+executable hmake-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_hmake
+  autogen-modules:
+      Paths_hmake
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >=4.7 && <5
+  default-language: Haskell2010
+  default-extensions: OverloadedStrings, LambdaCase, QuasiQuotes
+
+test-suite hmake-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_hmake
+  autogen-modules:
+      Paths_hmake
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >=4.7 && <5
+  default-language: Haskell2010
+  default-extensions: LambdaCase, OverloadedStrings, QuasiQuotes
