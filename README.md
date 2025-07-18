@@ -1,2 +1,2 @@
 # hmake
-Reproduction of GNU make with more powerful syntaxes
+GNU make-like software with more powerful and human-readable syntaxes
