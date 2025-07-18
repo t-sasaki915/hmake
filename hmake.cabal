@@ -20,22 +20,36 @@ source-repository head
   type: git
   location: https://github.com/t-sasaki915/hmake
 
+library
+  exposed-modules:
+      Makefile.Parser.Internal
+      Makefile.Parser
+  other-modules:
+      Paths_hmake
+  autogen-modules:
+      Paths_hmake
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , parsec ==3.1.18.0
+    , text ==2.1.2
+  default-language: Haskell2010
+  default-extensions: OverloadedStrings, LambdaCase, QuasiQuotes
 
 executable hmake
   main-is: Main.hs
   other-modules:
       Paths_hmake
-      Makefile.Parser.Internal
-      Makefile.Parser
   autogen-modules:
       Paths_hmake
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
-    , parsec ==3.1.18.0
-    , text ==2.1.2
+      hmake
+    , base >=4.7 && <5
   default-language: Haskell2010
   default-extensions: OverloadedStrings, LambdaCase, QuasiQuotes
 
@@ -44,12 +58,18 @@ test-suite hmake-test
   main-is: Spec.hs
   other-modules:
       Paths_hmake
+      Makefile.ParserSpec
   autogen-modules:
       Paths_hmake
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      hmake
+    , base >=4.7 && <5
+    , hspec ==2.11.12
+    , hspec-parsec ==0
+    , parsec
+    , text
   default-language: Haskell2010
   default-extensions: LambdaCase, OverloadedStrings, QuasiQuotes

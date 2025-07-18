@@ -1,5 +1,5 @@
 module Makefile.Parser
-    ( Target (..)
+    ( MakefileToken (..)
     , target
     , dependencyList
     , dependency
@@ -16,9 +16,10 @@ import           Makefile.Parser.Internal (msnoc)
 
 type Parser a = Parsec Text () a
 
-data Target = Target Text [Text]
+data MakefileToken = TargetToken Text [Text]
+                   | CommentToken Text
 
-target :: Parser Target
+target :: Parser MakefileToken
 target = do
     targetName <- Text.pack <$> manyTill alphaNum (lookAhead (spaces <|> void (char ':')))
     _          <- spaces
@@ -26,7 +27,7 @@ target = do
     _          <- spaces
     dependList <- dependencyList
 
-    pure (Target targetName dependList)
+    pure (TargetToken targetName dependList)
 
 dependencyList :: Parser [Text]
 dependencyList = try emptyDependencyList
@@ -40,5 +41,5 @@ dependencyList = try emptyDependencyList
 dependency :: Parser Text
 dependency = Text.pack <$> manyTill alphaNum (lookAhead (spaces <|> void (char ',') <|> void (char ']')))
 
-comment :: Parser ()
-comment = void (spaces >> string "--" >> manyTill anyChar (try (void newline <|> eof)))
+comment :: Parser MakefileToken
+comment = CommentToken . Text.pack <$> (spaces *> string "--" *> manyTill anyChar (try (void newline <|> eof)))

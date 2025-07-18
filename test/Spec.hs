@@ -1,2 +1,7 @@
+import           Test.Hspec          (hspec)
+
+import           Makefile.ParserSpec (makefileParserSpec)
+
 main :: IO ()
-main = putStrLn "No test"
+main = hspec $ do
+    makefileParserSpec
