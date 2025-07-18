@@ -21,10 +21,11 @@ source-repository head
   location: https://github.com/t-sasaki915/hmake
 
 
-executable hmake-exe
+executable hmake
   main-is: Main.hs
   other-modules:
       Paths_hmake
+      Makefile.Parser.Internal
       Makefile.Parser
   autogen-modules:
       Paths_hmake
@@ -34,6 +35,7 @@ executable hmake-exe
   build-depends:
       base >=4.7 && <5
     , parsec ==3.1.18.0
+    , text ==2.1.2
   default-language: Haskell2010
   default-extensions: OverloadedStrings, LambdaCase, QuasiQuotes
 
