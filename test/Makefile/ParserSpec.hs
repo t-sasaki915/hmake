@@ -1,7 +1,7 @@
 module Makefile.ParserSpec (makefileParserSpec) where
 
 import           Test.Hspec        (Spec, describe, it)
-import           Test.Hspec.Parsec (shouldParse)
+import           Test.Hspec.Parsec (shouldFailOn, shouldParse)
 
 import           Data.Text         (Text)
 import           Text.Parsec       (ParseError, Parsec, eof, parse)
@@ -63,6 +63,63 @@ makefileParserSpec = do
 
         it "should parse a target with a dependency list containing whitespaces" $
             parseEof target "a.out: [ main.o\n, sub.o\n]\n" `shouldParse` TargetToken "a.out" ["main.o", "sub.o"]
+
+    describe "text value parser" $ do
+        it "should parse a text value" $
+            parseEof textValueToken "\"AA BB CC !!! &&&\"" `shouldParse` TextValueToken "AA BB CC !!! &&&"
+
+        it "should not parse a malformed text value" $
+            parseEof textValueToken `shouldFailOn` "\"AA"
+
+    describe "integer value parser" $ do
+        it "should parse an integer value" $
+            parseEof integerValueToken "123456" `shouldParse` IntegerValueToken 123456
+
+        it "should not parse a malformed integer value" $
+            parseEof integerValueToken `shouldFailOn` "1234.56"
+
+    describe "float value parser" $ do
+        it "should parse a float value" $
+            parseEof floatValueToken "1234.56" `shouldParse` FloatValueToken 1234.56
+
+        it "should not parse a malformed float value" $
+            parseEof floatValueToken `shouldFailOn` "123456"
+
+    describe "bool value parser" $ do
+        it "should parse True" $
+            parseEof boolValueToken "True" `shouldParse` BoolValueToken True
+
+        it "should parse False" $
+            parseEof boolValueToken "False" `shouldParse` BoolValueToken False
+
+        it "should not parse a malformed bool value" $
+            parseEof boolValueToken `shouldFailOn` "Tru"
+
+    describe "list value parser" $ do
+        it "should parse a list value" $
+            parseEof listValueToken "[\"abc\", 123, True]" `shouldParse` ListValueToken [TextValueToken "abc", IntegerValueToken 123, BoolValueToken True]
+
+        it "should parse a list value with whitespaces" $
+            parseEof listValueToken "[  \"abc\"  , 123,   True ]" `shouldParse` ListValueToken [TextValueToken "abc", IntegerValueToken 123, BoolValueToken True]
+
+        it "should parse a list value with newlines" $
+            parseEof listValueToken "[ \"abc\"\n, 123\n, True\n]" `shouldParse` ListValueToken [TextValueToken "abc", IntegerValueToken 123, BoolValueToken True]
+
+        it "should not parse a malformed list" $
+            parseEof listValueToken `shouldFailOn` "["
+
+    describe "variable parser" $ do
+        it "should parse a variable with text value" $
+            parseEof variable "BUILD_DIR := \"build\"" `shouldParse` VariableToken False "BUILD_DIR" (TextValueToken "build")
+
+        it "should parse a variable with integer value and whitespaces" $
+            parseEof variable "THRESHOLD   :=    8" `shouldParse` VariableToken False "THRESHOLD" (IntegerValueToken 8)
+
+        it "should parse a constant variable with float value" $
+            parseEof variable "const PI := 3.14" `shouldParse` VariableToken True "PI" (FloatValueToken 3.14)
+
+        it "should parse a constant variable with list value and whitespaces" $
+            parseEof variable "const    PHONY   :=    [ \"build\"  ,  \"clean\" ]" `shouldParse` VariableToken True "PHONY" (ListValueToken [TextValueToken "build", TextValueToken "clean"])
 
     describe "makefile parser" $ do
         it "should parse a Makefile with a target" $
