@@ -1,5 +1,6 @@
 module Makefile.Parser
-    ( MakefileToken (..)
+    ( TargetToken (..)
+    , makefileParser
     , target
     , dependencyList
     , dependency
@@ -16,10 +17,12 @@ import           Makefile.Parser.Internal (msnoc)
 
 type Parser a = Parsec Text () a
 
-data MakefileToken = TargetToken Text [Text]
-                   | CommentToken Text
+data TargetToken = TargetToken Text [Text] deriving (Show, Eq)
 
-target :: Parser MakefileToken
+makefileParser :: Parser [TargetToken]
+makefileParser = many $ optional comment *> target <* optional comment
+
+target :: Parser TargetToken
 target = do
     targetName <- Text.pack <$> manyTill alphaNum (lookAhead (spaces <|> void (char ':')))
     _          <- spaces
@@ -34,12 +37,12 @@ dependencyList = try emptyDependencyList
              <|> try nonEmptyDependencyList
              <|> noDependencyList
     where
-        noDependencyList       = newline $> []
-        emptyDependencyList    = char '[' >> spaces >> char ']' >> newline $> []
-        nonEmptyDependencyList = char '[' *> spaces *> (many (spaces *> dependency <* spaces <* char ',' <* spaces) `msnoc` dependency) <* spaces <* char ']' <* newline
+        noDependencyList       = optional comment *> newline $> []
+        emptyDependencyList    = char '[' *> spaces *> char ']' *> optional comment *> newline $> []
+        nonEmptyDependencyList = char '[' *> spaces *> (many (spaces *> dependency <* spaces <* char ',' <* spaces) `msnoc` dependency) <* spaces <* char ']' <* optional comment <* newline
 
 dependency :: Parser Text
 dependency = Text.pack <$> manyTill alphaNum (lookAhead (spaces <|> void (char ',') <|> void (char ']')))
 
-comment :: Parser MakefileToken
-comment = CommentToken . Text.pack <$> (spaces *> string "--" *> manyTill anyChar (try (void newline <|> eof)))
+comment :: Parser Text
+comment = Text.pack <$> (spaces *> string "--" *> manyTill anyChar (try (void newline <|> eof)))
