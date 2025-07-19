@@ -27,5 +27,17 @@ makefileParserSpec = do
         it "should parse an empty list with whitespaces" $
             parseEof dependencyList "[   ]     \n" `shouldParse` []
 
+        it "should parse a list with single element" $
+            parseEof dependencyList "[abc]\n" `shouldParse` ["abc"]
+
+        it "should parse a list with single element and whitespaces" $
+            parseEof dependencyList "[   abc  ]      \n" `shouldParse` ["abc"]
+
+        it "should parse a list with multiple elements" $
+            parseEof dependencyList "[abc,def,ghi]\n" `shouldParse` ["abc", "def", "ghi"]
+
+        it "should parse a list with multiple elements and whitespaces" $
+            parseEof dependencyList "[  abc , def,  ghi   ]  \n" `shouldParse` ["abc", "def", "ghi"]
+
 parseEof :: Parsec Text () a -> Text -> Either ParseError a
 parseEof parser = parse (parser <* eof) ""

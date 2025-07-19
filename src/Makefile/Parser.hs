@@ -33,16 +33,10 @@ target = do
     pure (TargetToken targetName dependList)
 
 dependencyList :: Parser [Text]
-dependencyList = try noDependencyList
-             <|> try emptyDependencyList
-             <|> nonEmptyDependencyList
-    where
-        noDependencyList       = newline $> []
-        emptyDependencyList    = char '[' *> spaces *> char ']' *> spacesAndNewline $> []
-        nonEmptyDependencyList = char '[' *> spaces *> (many (spaces *> dependency <* spaces <* char ',' <* spaces) `msnoc` dependency) <* spaces <* char ']' <* spacesAndNewline
+dependencyList = try (newline $> []) <|> (char '[' *> spaces *> sepBy dependency (try (spaces *> char ',' <* spaces)) <* spaces <* char ']' <* spacesAndNewline)
 
 dependency :: Parser Text
-dependency = Text.pack <$> manyTill alphaNum (lookAhead (spaces <|> void (char ',') <|> void (char ']')))
+dependency = Text.pack <$> many1 (alphaNum <|> oneOf acceptableSymbols)
 
 comment :: Parser Text
 comment = Text.pack <$> (spaces *> string "--" *> manyTill anyChar (try (void newline <|> eof)))

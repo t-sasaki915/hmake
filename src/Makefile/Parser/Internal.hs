@@ -1,6 +1,6 @@
 module Makefile.Parser.Internal
     ( spacesAndNewline
-    , msnoc
+    , acceptableSymbols
     ) where
 
 import           Data.Functor (($>))
@@ -10,5 +10,5 @@ import           Text.Parsec
 spacesAndNewline :: Parsec Text () ()
 spacesAndNewline = skipMany (char ' ' <|> char '\t') *> newline $> ()
 
-msnoc :: Monad m => m [a] -> m a -> m [a]
-msnoc mxs mx = mxs >>= \xs -> mx >>= \x -> pure (xs <> [x])
+acceptableSymbols :: [Char]
+acceptableSymbols = "`~!@#$%^&*()_+{}|<>?-=;'./"
