@@ -13,7 +13,7 @@ import           Data.Text                (Text)
 import qualified Data.Text                as Text
 import           Text.Parsec
 
-import           Makefile.Parser.Internal (msnoc)
+import           Makefile.Parser.Internal
 
 type Parser a = Parsec Text () a
 
@@ -33,13 +33,13 @@ target = do
     pure (TargetToken targetName dependList)
 
 dependencyList :: Parser [Text]
-dependencyList = try emptyDependencyList
-             <|> try nonEmptyDependencyList
-             <|> noDependencyList
+dependencyList = try noDependencyList
+             <|> try emptyDependencyList
+             <|> nonEmptyDependencyList
     where
-        noDependencyList       = optional comment *> newline $> []
-        emptyDependencyList    = char '[' *> spaces *> char ']' *> optional comment *> newline $> []
-        nonEmptyDependencyList = char '[' *> spaces *> (many (spaces *> dependency <* spaces <* char ',' <* spaces) `msnoc` dependency) <* spaces <* char ']' <* optional comment <* newline
+        noDependencyList       = newline $> []
+        emptyDependencyList    = char '[' *> spaces *> char ']' *> spacesAndNewline $> []
+        nonEmptyDependencyList = char '[' *> spaces *> (many (spaces *> dependency <* spaces <* char ',' <* spaces) `msnoc` dependency) <* spaces <* char ']' <* spacesAndNewline
 
 dependency :: Parser Text
 dependency = Text.pack <$> manyTill alphaNum (lookAhead (spaces <|> void (char ',') <|> void (char ']')))
