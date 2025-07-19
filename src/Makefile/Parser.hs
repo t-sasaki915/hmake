@@ -3,11 +3,12 @@ module Makefile.Parser
     , makefileParser
     , target
     , dependencyList
-    , dependency
+    , targetName
     , comment
     ) where
 
 import           Control.Monad            (void)
+import           Data.Char                (isSpace)
 import           Data.Functor             (($>))
 import           Data.Text                (Text)
 import qualified Data.Text                as Text
@@ -18,23 +19,24 @@ import           Makefile.Parser.Internal
 data TargetToken = TargetToken Text [Text] deriving (Show, Eq)
 
 makefileParser :: Parser [TargetToken]
-makefileParser = many $ optional comment *> target <* optional comment
+makefileParser = skipMeaningless *> many (target <* skipMeaningless) <* eof
 
 target :: Parser TargetToken
 target = do
-    targetName <- dependency
-    _          <- skipSpaces
-    _          <- char ':'
-    _          <- skipSpaces
-    dependList <- dependencyList
+    targetName' <- targetName
+    _           <- skipSpaces *> char ':' <* skipSpaces
+    dependList  <- dependencyList
 
-    pure (TargetToken targetName dependList)
+    pure (TargetToken targetName' dependList)
 
 dependencyList :: Parser [Text]
-dependencyList = try (newline $> []) <|> (char '[' *> spaces *> sepBy dependency (try (spaces *> char ',' <* spaces)) <* spaces <* char ']' <* spacesAndNewline)
+dependencyList = try (newline $> []) <|> (char '[' *> spaces *> targetName `sepBy` try (spaces *> char ',' <* spaces) <* spaces <* char ']' <* spacesAndNewline)
 
-dependency :: Parser Text
-dependency = Text.pack <$> many1 (alphaNum <|> oneOf acceptableSymbols)
+targetName :: Parser Text
+targetName = Text.pack <$> many1 (alphaNum <|> oneOf acceptableSymbols)
+
+skipMeaningless :: Parser ()
+skipMeaningless = skipMany (void (satisfy isSpace) <|> void newline <|> void (try comment))
 
 comment :: Parser Text
 comment = Text.pack <$> (spaces *> string "--" *> manyTill anyChar (try (void newline <|> eof)))

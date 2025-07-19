@@ -64,5 +64,30 @@ makefileParserSpec = do
         it "should parse a target with a dependency list containing whitespaces" $
             parseEof target "a.out: [ main.o\n, sub.o\n]\n" `shouldParse` (TargetToken "a.out" ["main.o", "sub.o"])
 
+    describe "makefile parser" $ do
+        it "should parse a Makefile with a target" $
+            parseEof makefileParser "a.out: [main.o, sub.o]\n" `shouldParse` [TargetToken "a.out" ["main.o", "sub.o"]]
+
+        it "should parse a Makefile with multiple targets" $
+            parseEof makefileParser "a.out: [main.o, sub.o]\nmain.o: [main.c, header.h]\nsub.o: [sub.c]\n" `shouldParse` [TargetToken "a.out" ["main.o", "sub.o"], TargetToken "main.o" ["main.c", "header.h"], TargetToken "sub.o" ["sub.c"]]
+
+        it "should parse a Makefile with a comment" $
+            parseEof makefileParser "-- COMMENT1" `shouldParse` []
+
+        it "should parse a Makefile with a target surrounded by comments" $
+            parseEof makefileParser "-- COMMENT1\na.out: [main.o, sub.o]\n-- COMMENT2" `shouldParse` [TargetToken "a.out" ["main.o", "sub.o"]]
+
+        it "should parse a Makefile with a target and a comment before the target" $
+            parseEof makefileParser "-- COMMENT\na.out: [main.o, sub.o]\n" `shouldParse` [TargetToken "a.out" ["main.o", "sub.o"]]
+
+        it "should parse a Makefile with a target and a comment after the target" $
+            parseEof makefileParser "a.out: [main.o, sub.o]\n-- COMMENT" `shouldParse` [TargetToken "a.out" ["main.o", "sub.o"]]
+
+        it "should parse a Makefile with multiple targets and comments" $
+            parseEof makefileParser "-- Binary\na.out: [main.o, sub.o]\n-- Object file of main\nmain.o: [main.c, header.h]\n"  `shouldParse` [TargetToken "a.out" ["main.o", "sub.o"], TargetToken "main.o" ["main.c", "header.h"]]
+
+        it "should parse a Makefile with newlines" $
+            parseEof makefileParser "\na.out: [main.o, sub.o]\n\nmain.o: [main.c, header.h]\n\nsub.o: [sub.c]\n\n" `shouldParse` [TargetToken "a.out" ["main.o", "sub.o"], TargetToken "main.o" ["main.c", "header.h"], TargetToken "sub.o" ["sub.c"]]
+
 parseEof :: Parsec Text () a -> Text -> Either ParseError a
 parseEof parser = parse (parser <* eof) ""
