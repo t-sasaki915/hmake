@@ -30,7 +30,7 @@ target = do
     pure (TargetToken targetName' dependList)
 
 dependencyList :: Parser [Text]
-dependencyList = try (newline $> []) <|> (char '[' *> spaces *> targetName `sepBy` try (spaces *> char ',' <* spaces) <* spaces <* char ']' <* spacesAndNewline)
+dependencyList = try (newline $> []) <|> (char '[' *> spaces *> targetName `sepBy` try (spaces *> char ',' <* spaces) <* spaces <* char ']' <* skipSpaces <* newline)
 
 targetName :: Parser Text
 targetName = Text.pack <$> many1 (alphaNum <|> oneOf acceptableSymbols)

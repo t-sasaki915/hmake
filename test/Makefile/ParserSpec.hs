@@ -50,19 +50,19 @@ makefileParserSpec = do
 
     describe "target parser" $ do
         it "should parse a target with no dependency list" $
-            parseEof target "a.out:\n" `shouldParse` (TargetToken "a.out" [])
+            parseEof target "a.out:\n" `shouldParse` TargetToken "a.out" []
 
         it "should parse a target with no dependency list and whitespaces" $
-            parseEof target "a.out  :      \n" `shouldParse` (TargetToken "a.out" [])
+            parseEof target "a.out  :      \n" `shouldParse` TargetToken "a.out" []
 
         it "should parse a target with a dependency list" $
-            parseEof target "a.out: [main.o, sub.o]\n" `shouldParse` (TargetToken "a.out" ["main.o", "sub.o"])
+            parseEof target "a.out: [main.o, sub.o]\n" `shouldParse` TargetToken "a.out" ["main.o", "sub.o"]
 
         it "should parse a target with a dependency list and whitespaces" $
-            parseEof target "a.out   :  [   main.o , sub.o   ] \n" `shouldParse` (TargetToken "a.out" ["main.o", "sub.o"])
+            parseEof target "a.out   :  [   main.o , sub.o   ] \n" `shouldParse` TargetToken "a.out" ["main.o", "sub.o"]
 
         it "should parse a target with a dependency list containing whitespaces" $
-            parseEof target "a.out: [ main.o\n, sub.o\n]\n" `shouldParse` (TargetToken "a.out" ["main.o", "sub.o"])
+            parseEof target "a.out: [ main.o\n, sub.o\n]\n" `shouldParse` TargetToken "a.out" ["main.o", "sub.o"]
 
     describe "makefile parser" $ do
         it "should parse a Makefile with a target" $
