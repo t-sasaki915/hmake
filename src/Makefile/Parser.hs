@@ -15,8 +15,6 @@ import           Text.Parsec
 
 import           Makefile.Parser.Internal
 
-type Parser a = Parsec Text () a
-
 data TargetToken = TargetToken Text [Text] deriving (Show, Eq)
 
 makefileParser :: Parser [TargetToken]
@@ -24,10 +22,10 @@ makefileParser = many $ optional comment *> target <* optional comment
 
 target :: Parser TargetToken
 target = do
-    targetName <- Text.pack <$> manyTill alphaNum (lookAhead (spaces <|> void (char ':')))
-    _          <- spaces
+    targetName <- dependency
+    _          <- skipSpaces
     _          <- char ':'
-    _          <- spaces
+    _          <- skipSpaces
     dependList <- dependencyList
 
     pure (TargetToken targetName dependList)
