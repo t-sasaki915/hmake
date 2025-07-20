@@ -40,7 +40,7 @@ data VariableValueToken = TextValueToken Text
                         deriving (Show, Eq)
 
 makefileParser :: Parser [MakefileToken]
-makefileParser = skipMeaningless *> many (target <* skipMeaningless) <* eof
+makefileParser = skipMeaningless *> many ((try variable <|> target) <* skipMeaningless) <* eof
 
 target :: Parser MakefileToken
 target = do

@@ -153,5 +153,8 @@ makefileParserSpec = do
         it "should parse a Makefile with newlines" $
             parseEof makefileParser "\na.out: [main.o, sub.o]\n\nmain.o: [main.c, header.h]\n\nsub.o: [sub.c]\n\n" `shouldParse` [TargetToken "a.out" ["main.o", "sub.o"], TargetToken "main.o" ["main.c", "header.h"], TargetToken "sub.o" ["sub.c"]]
 
+        it "should parse a Makefile with a target and multiple variables" $
+            parseEof makefileParser "const BUILD_DIR := \"build\"\nRETRY := True\na.out: [main.o, sub.o]\n" `shouldParse` [VariableToken True "BUILD_DIR" (TextValueToken "build"), VariableToken False "RETRY" (BoolValueToken True), TargetToken "a.out" ["main.o", "sub.o"]]
+
 parseEof :: Parsec Text () a -> Text -> Either ParseError a
 parseEof parser = parse (parser <* eof) ""
