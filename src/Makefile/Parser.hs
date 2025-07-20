@@ -13,6 +13,7 @@ module Makefile.Parser
     , floatValueToken
     , boolValueToken
     , listValueToken
+    , targetReferenceToken
     , comment
     ) where
 
@@ -35,6 +36,7 @@ data VariableValueToken = TextValueToken Text
                         | FloatValueToken Float
                         | BoolValueToken Bool
                         | ListValueToken [VariableValueToken]
+                        | TargetReferenceToken Text
                         deriving (Show, Eq)
 
 makefileParser :: Parser [MakefileToken]
@@ -67,7 +69,7 @@ variableName :: Parser Text
 variableName = Text.pack <$> many1 (oneOf (['A'..'Z'] <> map intToDigit [0..9] <> ['_']))
 
 variableValue :: Parser VariableValueToken
-variableValue = try textValueToken <|> try floatValueToken <|> try integerValueToken <|> try boolValueToken <|> listValueToken
+variableValue = try textValueToken <|> try floatValueToken <|> try integerValueToken <|> try boolValueToken <|> try listValueToken <|> targetReferenceToken
 
 textValueToken :: Parser VariableValueToken
 textValueToken = TextValueToken . Text.pack <$> (char '"' *> manyTill anyChar (char '"'))
@@ -83,6 +85,9 @@ boolValueToken = BoolValueToken <$> (try (string "True" $> True) <|> (string "Fa
 
 listValueToken :: Parser VariableValueToken
 listValueToken = ListValueToken <$> (char '[' *> spaces *> variableValue `sepBy` try (spaces *> char ',' <* spaces) <* spaces <* char ']')
+
+targetReferenceToken :: Parser VariableValueToken
+targetReferenceToken = TargetReferenceToken <$> targetName
 
 skipMeaningless :: Parser ()
 skipMeaningless = skipMany (void (satisfy isSpace) <|> void newline <|> void (try comment))

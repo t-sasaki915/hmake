@@ -108,6 +108,13 @@ makefileParserSpec = do
         it "should not parse a malformed list" $
             parseEof listValueToken `shouldFailOn` "["
 
+    describe "target reference parser" $ do
+        it "should parse a target reference" $
+            parseEof targetReferenceToken "main.o" `shouldParse` TargetReferenceToken "main.o"
+
+        it "should not parse a malformed target reference" $
+            parseEof targetReferenceToken `shouldFailOn` "[],"
+
     describe "variable parser" $ do
         it "should parse a variable with text value" $
             parseEof variable "BUILD_DIR := \"build\"" `shouldParse` VariableToken False "BUILD_DIR" (TextValueToken "build")
@@ -119,7 +126,7 @@ makefileParserSpec = do
             parseEof variable "const PI := 3.14" `shouldParse` VariableToken True "PI" (FloatValueToken 3.14)
 
         it "should parse a constant variable with list value and whitespaces" $
-            parseEof variable "const    PHONY   :=    [ \"build\"  ,  \"clean\" ]" `shouldParse` VariableToken True "PHONY" (ListValueToken [TextValueToken "build", TextValueToken "clean"])
+            parseEof variable "const    PHONY   :=    [ build  ,  clean ]" `shouldParse` VariableToken True "PHONY" (ListValueToken [TargetReferenceToken "build", TargetReferenceToken "clean"])
 
     describe "makefile parser" $ do
         it "should parse a Makefile with a target" $
