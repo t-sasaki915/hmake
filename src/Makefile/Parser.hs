@@ -4,7 +4,7 @@ module Makefile.Parser
     , makefileParser
     , target
     , variable
-    , dependencyList
+    , list
     , targetName
     , variableName
     , variableValue
@@ -18,7 +18,7 @@ module Makefile.Parser
     ) where
 
 import           Control.Monad            (void)
-import           Data.Char                (intToDigit, isSpace)
+import           Data.Char                (intToDigit)
 import           Data.Functor             (($>))
 import           Data.Maybe               (isJust)
 import           Data.Text                (Text)
@@ -27,7 +27,7 @@ import           Text.Parsec
 
 import           Makefile.Parser.Internal
 
-data MakefileToken = TargetToken Text [Text]
+data MakefileToken = TargetToken Text [Text] [Text]
                    | VariableToken Bool Text VariableValueToken
                    deriving (Show, Eq)
 
@@ -46,8 +46,15 @@ target :: Parser MakefileToken
 target = do
     targetName' <- targetName
     _           <- skipSpaces *> char ':' <* skipSpaces
+    dependList  <- (lookAhead newline $> []) <|> list targetName
+    _           <- newline
+    _           <- skipMeaningless
+    content     <- many (try commandLine <* skipMeaningless)
 
-    TargetToken targetName' <$> dependencyList
+    pure (TargetToken targetName' dependList content)
+
+commandLine :: Parser Text
+commandLine = Text.pack <$> (skipSpaces1 *> manyTill1 anyChar (try (void newline) <|> eof))
 
 variable :: Parser MakefileToken
 variable = do
@@ -58,9 +65,8 @@ variable = do
 
     VariableToken isConst varName <$> variableValue
 
-dependencyList :: Parser [Text]
-dependencyList = try (newline $> [])
-             <|> (char '[' *> spaces *> targetName `sepBy` try (spaces *> char ',' <* spaces) <* spaces <* char ']' <* skipSpaces <* newline)
+list :: Parser a -> Parser [a]
+list p = char '[' *> spaces *> p `sepBy` try (spaces *> char ',' <* spaces) <* spaces <* char ']'
 
 targetName :: Parser Text
 targetName = Text.pack <$> many1 (alphaNum <|> oneOf acceptableSymbols)
@@ -84,13 +90,13 @@ boolValueToken :: Parser VariableValueToken
 boolValueToken = BoolValueToken <$> (try (string "True" $> True) <|> (string "False" $> False))
 
 listValueToken :: Parser VariableValueToken
-listValueToken = ListValueToken <$> (char '[' *> spaces *> variableValue `sepBy` try (spaces *> char ',' <* spaces) <* spaces <* char ']')
+listValueToken = ListValueToken <$> list variableValue
 
 targetReferenceToken :: Parser VariableValueToken
 targetReferenceToken = TargetReferenceToken <$> targetName
 
 skipMeaningless :: Parser ()
-skipMeaningless = skipMany (void (satisfy isSpace) <|> void newline <|> void (try comment))
+skipMeaningless = skipMany (try (void comment) <|> void (char '\n'))
 
 comment :: Parser Text
-comment = Text.pack <$> (spaces *> string "--" *> manyTill anyChar (try (void newline <|> eof)))
+comment = Text.pack <$> (skipSpaces *> string "--" *> manyTill anyChar (try (void newline <|> eof)))
