@@ -1,6 +1,7 @@
 module Makefile.Parser
     ( MakefileToken (..)
     , VariableValueToken (..)
+    , parseMakefile
     , makefileParser
     , target
     , variable
@@ -38,6 +39,9 @@ data VariableValueToken = TextValueToken Text
                         | ListValueToken [VariableValueToken]
                         | TargetReferenceToken Text
                         deriving (Show, Eq)
+
+parseMakefile :: Text -> Either ParseError [MakefileToken]
+parseMakefile = parse makefileParser ""
 
 makefileParser :: Parser [MakefileToken]
 makefileParser = skipMeaningless *> many ((try variable <|> target) <* skipMeaningless) <* eof
